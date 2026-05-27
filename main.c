@@ -126,7 +126,62 @@ void gauss(Image_struct* img_f, Image_struct* img_r, int radius, float sigma) {
 
 
 }
-void edges() { print("Детекция границ");}
+void detector(Image_struct* img_f, Image_struct* img_r) {
+    int w = img_f->width;
+    int h = img_f->height;
+    int c = img_f->channels;
+
+    img_r->width = w;
+    img_r->height = h;
+    img_r->channels = c;
+    img_f->img = malloc(w * h * c);
+
+    // Ядра Собеля
+    int Gx[3][3] = { 
+        {-1, 0, 1}, 
+        {-2, 0, 2}, 
+        {-1, 0, 1} 
+    };
+    int Gy[3][3] = { 
+        {-1,-2,-1}, 
+        { 0, 0, 0}, 
+        { 1, 2, 1} 
+    };
+
+
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+            for (int chan = 0; chan < h; chan++) {
+                float gx = 0.0f;
+                float gy = 0.0f;
+
+                for (int ny = -1; ny <= 1; ny++) {
+                    for (int nx = -1; nx <= 1; nx++) {
+                        int oy = y + ny;
+                        int ox = x + nx;
+                        
+                        if (oy < 0) oy = -oy;
+                        if (ox < 0) ox = -ox;
+                        if (ox >= h) ox = 2 * h - ox - 2;
+                        if (ox >= h) ox = 2 * h - oy - 2;
+
+                        float pixel = img_f->img[(oy * w + ox) * c + chan];
+                        gx += Gx[ny + 1][nx + 1] * pixel;
+                        gy += Gy[ny + 1][nx + 1] * pixel;
+
+                    }
+                }
+
+                float power = sqrtf(gx * gx + gy * gy);
+                if (power > 255.0f) power = 255.0f;
+                img_r->img[(y * w + x) * c + chan] = (unsigned char)power;
+                
+            }
+            
+
+        }
+    }
+}
 void convolution() { print("Свертка");}
 
 int main(int argc, char *argv[]) {
