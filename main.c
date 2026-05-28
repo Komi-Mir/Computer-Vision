@@ -216,12 +216,48 @@ void convolution(Image_struct* img_f, Image_struct* img_r, int radius, float *ke
 
                 if (res < 0.0f) res = 0.0f;
                 if (res > 255.0f) res = 255.0f;
-                
+
                 img_r->img[(y * w + x) * c + chan] = (unsigned char)res;
                 
             }
             
 
+        }
+    }
+}
+
+void pixel(Image_struct* img_f, Image_struct* img_r, int pixel_size) {
+    int w = img_f->width;
+    int h = img_f->height;
+    int c = img_f->channels;
+
+    img_r->width = w;
+    img_r->height = h;
+    img_r->channels = c;
+    img_f->img = malloc(w * h * c);
+
+    for (int y = 0; y < h; y += pixel_size) {
+        for (int x = 0; x < w; x += pixel_size) {
+            for (int chan = 0; chan < c; chan++) {
+                int count = 0;
+                float summ = 0.0f;
+
+                for (int ny = y; (ny < y + pixel_size) && (ny < h); ny++) {
+                    for (int nx = x; (nx < x + pixel_size) && (nx < h); nx++) {
+                        summ += img_f->img[(ny * w + nx) * c + chan];
+                        count += 1;
+                    }
+
+                }
+
+                unsigned char avg = (unsigned char)(summ / count);
+
+                for (int ny = y; (ny < y + pixel_size) && (ny < h); ny++) {
+                    for (int nx = x; (nx < x + pixel_size) && (nx < h); nx++) {
+                        img_r->img[(ny * w + nx) * c + chan] = avg;
+                    }
+                }
+            }
         }
     }
 }
